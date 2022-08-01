@@ -7,8 +7,9 @@ import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import { ICollectionStore, IERC721CollectionV2, ItemToBuy } from "../interfaces/IDecentralandCollectionStore.sol";
+import { IERC721Receiver } from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-contract Decentraland is Ownable, ReentrancyGuard {
+contract Decentraland is Ownable, ReentrancyGuard, IERC721Receiver {
 
     using SafeERC20 for IERC20;
 
@@ -19,12 +20,12 @@ contract Decentraland is Ownable, ReentrancyGuard {
 
     /// Contract which get used to facilitate the primary sale of NFTs
     /// on decentraland ecosystem.
-    ICollectionStore immutable primarySaleContract;
+    ICollectionStore public immutable primarySaleContract;
     /// Contract which get used to facilitate the secondary sale of NFTs
     /// on decentraland ecosystem.
-    IMarketPlaceV2 immutable secondarySaleContract;
+    IMarketPlaceV2 public immutable secondarySaleContract;
     /// Accepted ERC20 token by the primary and secondary sale contracts.
-    IERC20 immutable acceptedToken;
+    IERC20 public immutable acceptedToken;
 
     //------------ Events ------------------//
     event ItemPurchased(address beneficiary, address nftContract, uint256 tokenId, uint256 price);
@@ -126,19 +127,40 @@ contract Decentraland is Ownable, ReentrancyGuard {
         emit ItemPurchased(beneficiary, nftContract, tokenId, price);
     }
 
+    /**
+     * @dev Whenever an {IERC721} `tokenId` token is transferred to this contract via {IERC721-safeTransferFrom}
+     * by `operator` from `from`, this function is called.
+     *
+     * It must return its Solidity selector to confirm the token transfer.
+     * If any other value is returned or the interface is not implemented by the recipient, the transfer will be reverted.
+     *
+     * The selector can be obtained in Solidity with `IERC721Receiver.onERC721Received.selector`.
+     */
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) external returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
+    }
+
+
     function _generateInput(
         address beneficiary,
         address nftContract,
         uint256 tokenId,
         uint256 price
-    ) internal pure returns(ItemToBuy[] memory itemsToBuy) {
+    ) public pure returns(ItemToBuy[] memory) {
         address[] memory beneficiaries = new address[](1);
         uint256[] memory ids = new uint256[](1);
         uint256[] memory prices = new uint256[](1);
+        ItemToBuy[] memory itemsToBuy = new ItemToBuy[](1);
         beneficiaries[0] = beneficiary;
         ids[0] = tokenId;
         prices[0] = price;
         itemsToBuy[0] = ItemToBuy(IERC721CollectionV2(nftContract), ids, prices, beneficiaries);
+        return itemsToBuy;
     }
 
 }
