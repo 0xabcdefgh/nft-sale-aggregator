@@ -4,10 +4,12 @@ pragma solidity 0.8.15;
 import { IMarketPlaceV2 } from "../interfaces/IMarketPlaceV2.sol";
 import { SafeERC20, IERC20 } from  "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { IERC721Metadata } from "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import { ICollectionStore, IERC721CollectionV2, ItemToBuy } from "../interfaces/IDecentralandCollectionStore.sol";
 import { IERC721Receiver } from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import { NFTDetails, PriceDetails } from "../libraries/GetterTypes.sol";
 
 contract Decentraland is Ownable, ReentrancyGuard, IERC721Receiver {
 
@@ -125,6 +127,39 @@ contract Decentraland is Ownable, ReentrancyGuard, IERC721Receiver {
         IERC721(nftContract).safeTransferFrom(address(this), beneficiary, tokenId);
         // Emit event.
         emit ItemPurchased(beneficiary, nftContract, tokenId, price);
+    }
+
+    /// @notice Returns the details about the NFT.
+    /// @param nftAddress Address of the NFT whose data need to queried.
+    /// @param tokenId Identitifer of the NFT.
+    function getNFTData(address nftAddress, uint256 tokenId) external view returns(NFTDetails memory) {
+        uint256 nftPrice = secondarySaleContract.orderByAssetId(nftAddress, tokenId).price;
+        try IERC721CollectionV2(nftAddress).items(uint256(0)) returns (string memory,uint256,uint256,uint256 price,address,string memory metadata, string memory contentHash) {
+           return _returnNFTData(nftPrice, price, nftAddress, tokenId, metadata, contentHash);
+        } catch Panic(uint /*errorCode*/) {
+            try IERC721CollectionV2(nftAddress).items(uint256(1)) returns (string memory,uint256,uint256,uint256 price,address,string memory metadata, string memory contentHash) {
+                return _returnNFTData(nftPrice, price, nftAddress, tokenId, metadata, contentHash);
+            } catch Panic(uint /**errorCode */) {
+                (,,,uint256 price,,string memory metadata, string memory contentHash) = IERC721CollectionV2(nftAddress).items(tokenId);
+                return _returnNFTData(nftPrice, price, nftAddress, tokenId, metadata, contentHash);
+            }
+        }
+    }
+
+    function _returnNFTData(uint256 nftPrice, uint256 itemPrice, address nftAddress, uint256 tokenId, string memory metadata, string memory contentHash) internal view returns (NFTDetails memory){
+        string memory name = IERC721Metadata(nftAddress).name();
+        string memory symbol = IERC721Metadata(nftAddress).symbol();
+        string memory tokenURI;
+        try IERC721Metadata(nftAddress).tokenURI(tokenId) returns(string memory _tokenURI) {
+            tokenURI = _tokenURI;
+        } catch Error(string memory /** errorStatement */) {
+            tokenURI = "";
+        }
+        if (nftPrice == 0) {
+            nftPrice = itemPrice;
+        }
+        PriceDetails memory priceDetails = PriceDetails({token: address(acceptedToken), price: nftPrice});
+        return NFTDetails(priceDetails, name, symbol, tokenURI, metadata, contentHash);
     }
 
     /**

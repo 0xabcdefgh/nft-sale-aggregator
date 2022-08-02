@@ -4,7 +4,16 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 
-import { Decentraland, IERC721, ICollectionStore, ItemToBuy, IERC721CollectionV2, IERC20 } from "../src/adaptors/Decentraland.sol";
+import { 
+    Decentraland,
+    IERC721,
+    ICollectionStore,
+    ItemToBuy,
+    IERC721CollectionV2,
+    IERC20,
+    NFTDetails,
+    PriceDetails    
+} from "../src/adaptors/Decentraland.sol";
 
 contract DecentralandTest is Test {
 
@@ -58,5 +67,38 @@ contract DecentralandTest is Test {
         assertEq(IERC721(nftAddress).ownerOf(443), buyer, "Transfer of NFT failed");
         uint256 remainingBalance = 200000000000000000000 - 27900000000000000000;
         assertEq(manaToken.balanceOf(buyer), remainingBalance, "Incorrect balance accounting");
+    }
+
+    function testGetNFTDataWhenNFTIsNotMintedYet() public {
+        NFTDetails memory details = decentralandAdapter.getNFTData(nft1, 3676);
+        assertEq(details.priceDetails.price, uint256(0), "Incorrect price fetch");
+        assertEq(details.priceDetails.token, address(decentralandAdapter.acceptedToken()), "Incorrect token address");
+        assertEq(details.name, "Dojo Fish Wearables", "Incorrect name");
+        assertEq(details.symbol, "DCL-DJFSHWRBLS", "Incorrect symbol");
+        assertEq(details.tokenURI, "", "Incorrect tokenURI");
+        assertEq(details.metadata, "1:w:Dojo Fish Shirt::upper_body:BaseFemale,BaseMale", "Incorrect metadata");
+        assertEq(details.contentHash, "QmNqPJg6PjR9zJ8brjyy2XEQkBJcSv2FcsGZPx4bnMERz6", "Incorrect contentHash");
+    }
+
+    function testGetNFTDataWhenNFTIsMinted() public {
+        NFTDetails memory details = decentralandAdapter.getNFTData(nft1, 3675);
+        assertEq(details.priceDetails.price, uint256(0), "Incorrect price fetch");
+        assertEq(details.priceDetails.token, address(decentralandAdapter.acceptedToken()), "Incorrect token address");
+        assertEq(details.name, "Dojo Fish Wearables", "Incorrect name");
+        assertEq(details.symbol, "DCL-DJFSHWRBLS", "Incorrect symbol");
+        assertEq(details.tokenURI, "https://peer.decentraland.org/lambdas/collections/standard/erc721/137/0x210cf28a18306e136eb0908ad68f14b6e1e756c6/0/3675", "Incorrect tokenURI");
+        assertEq(details.metadata, "1:w:Dojo Fish Shirt::upper_body:BaseFemale,BaseMale", "Incorrect metadata");
+        assertEq(details.contentHash, "QmNqPJg6PjR9zJ8brjyy2XEQkBJcSv2FcsGZPx4bnMERz6", "Incorrect contentHash");
+    }
+
+    function testGetNFTDataWhenNFTIsOnOrder() public {
+        NFTDetails memory details = decentralandAdapter.getNFTData(nftAddress, 443);
+        assertEq(details.priceDetails.price, uint256(27900000000000000000), "Incorrect price fetch");
+        assertEq(details.priceDetails.token, address(decentralandAdapter.acceptedToken()), "Incorrect token address");
+        assertEq(details.name, "Blue santa hat", "Incorrect name");
+        assertEq(details.symbol, "DCL-BLSNTHT", "Incorrect symbol");
+        assertEq(details.tokenURI, "https://peer.decentraland.org/lambdas/collections/standard/erc721/137/0x08cbc78c1b2e2eea7627c39c8adf660d52e3d82c/0/443", "Incorrect tokenURI");
+        assertEq(details.metadata, "1:w:Blue santa hat:It's A Blue santa hat:hat:BaseMale,BaseFemale", "Incorrect metadata");
+        assertEq(details.contentHash, "QmXggx8reuohcxZRvMRjEJPYAkr7C7xWSKTX4iTdNuqxo4", "Incorrect contentHash");
     }
 }
