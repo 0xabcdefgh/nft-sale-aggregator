@@ -62,7 +62,7 @@ contract DecentralandTest is Test {
         assertEq(manaToken.balanceOf(buyer), 200000000000000000000, "Incorrect value set in storage");
         vm.startPrank(buyer);
         manaToken.approve(address(decentralandAdapter), 27900000000000000000);
-        decentralandAdapter.purchaseOrder(buyer, nftAddress, 443, uint256(0));
+        decentralandAdapter.purchaseOrder(buyer, nftAddress, 443, 27900000000000000000);
         vm.stopPrank();
         assertEq(IERC721(nftAddress).ownerOf(443), buyer, "Transfer of NFT failed");
         uint256 remainingBalance = 200000000000000000000 - 27900000000000000000;
@@ -100,5 +100,12 @@ contract DecentralandTest is Test {
         assertEq(details.tokenURI, "https://peer.decentraland.org/lambdas/collections/standard/erc721/137/0x08cbc78c1b2e2eea7627c39c8adf660d52e3d82c/0/443", "Incorrect tokenURI");
         assertEq(details.metadata, "1:w:Blue santa hat:It's A Blue santa hat:hat:BaseMale,BaseFemale", "Incorrect metadata");
         assertEq(details.contentHash, "QmXggx8reuohcxZRvMRjEJPYAkr7C7xWSKTX4iTdNuqxo4", "Incorrect contentHash");
+    }
+
+    function testSafeApprove() public {
+        IERC20(decentralandAdapter.acceptedToken()).approve(collectionStore, type(uint256).max);
+        assertEq(IERC20(decentralandAdapter.acceptedToken()).allowance(address(decentralandAdapter), collectionStore), type(uint256).max, "Incorrect allowance");
+        decentralandAdapter.setApprovals(collectionStore, 5);
+        assertEq(IERC20(decentralandAdapter.acceptedToken()).allowance(address(decentralandAdapter), collectionStore), 5, "Incorrect allowance");
     }
 }

@@ -50,7 +50,7 @@ contract Decentraland is Ownable, ReentrancyGuard, IERC721Receiver {
     /// @param amt Amount of funds allowed to spend by the `spender`.
     function setApprovals(address spender, uint256 amt) external onlyOwner {
         acceptedToken.safeApprove(spender, uint256(0));
-        acceptedToken.safeApprove(spender, amt);
+        acceptedToken.safeIncreaseAllowance(spender, amt);
     }
 
     /// @notice Allow to sweep asset (ERC20/ERC721) from the contract by the owner.
@@ -85,9 +85,6 @@ contract Decentraland is Ownable, ReentrancyGuard, IERC721Receiver {
         if (beneficiary == address(0)) {
             revert ZeroAddressBeneficary();
         }
-        if (price == uint256(0)) {
-            (price,) = primarySaleContract.getItemBuyData(IERC721CollectionV2(nftContract), tokenId);
-        }
         if (price > uint256(0)) {
             // Transfer the fund from the msg.sender to the contract
             acceptedToken.safeTransferFrom(msg.sender, address(this), price);
@@ -113,9 +110,6 @@ contract Decentraland is Ownable, ReentrancyGuard, IERC721Receiver {
     ) external nonReentrant {
         if (beneficiary == address(0)) {
             revert ZeroAddressBeneficary();
-        }
-        if (price == uint256(0)) {
-            price = secondarySaleContract.orderByAssetId(nftContract, tokenId).price;
         }
         if (price > uint256(0)) {
             // Transfer the fund from the msg.sender to the contract
