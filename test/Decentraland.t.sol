@@ -9,7 +9,7 @@ import {
     IERC721,
     ICollectionStore,
     ItemToBuy,
-    IERC721CollectionV2,
+    IERC721BaseCollectionV2,
     IERC20,
     NFTDetails,
     PriceDetails    
