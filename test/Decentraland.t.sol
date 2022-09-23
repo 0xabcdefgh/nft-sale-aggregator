@@ -70,7 +70,8 @@ contract DecentralandTest is Test {
     }
 
     function testGetNFTDataWhenNFTIsNotMintedYet() public {
-        NFTDetails memory details = decentralandAdapter.getNFTData(nft1, 3676);
+        uint256 assetId = decentralandAdapter.encodeAssetId(0, 0);
+        NFTDetails memory details = decentralandAdapter.getNFTData(nft1, assetId);
         assertEq(details.priceDetails.price, uint256(0), "Incorrect price fetch");
         assertEq(details.priceDetails.token, address(decentralandAdapter.acceptedToken()), "Incorrect token address");
         assertEq(details.name, "Dojo Fish Wearables", "Incorrect name");
@@ -81,7 +82,8 @@ contract DecentralandTest is Test {
     }
 
     function testGetNFTDataWhenNFTIsMinted() public {
-        NFTDetails memory details = decentralandAdapter.getNFTData(nft1, 3675);
+        uint256 assetId = decentralandAdapter.encodeAssetId(3675, 0);
+        NFTDetails memory details = decentralandAdapter.getNFTData(nft1, assetId);
         assertEq(details.priceDetails.price, uint256(0), "Incorrect price fetch");
         assertEq(details.priceDetails.token, address(decentralandAdapter.acceptedToken()), "Incorrect token address");
         assertEq(details.name, "Dojo Fish Wearables", "Incorrect name");
@@ -92,7 +94,8 @@ contract DecentralandTest is Test {
     }
 
     function testGetNFTDataWhenNFTIsOnOrder() public {
-        NFTDetails memory details = decentralandAdapter.getNFTData(nftAddress, 443);
+        uint256 assetId = decentralandAdapter.encodeAssetId(443, 0);
+        NFTDetails memory details = decentralandAdapter.getNFTData(nftAddress, assetId);
         assertEq(details.priceDetails.price, uint256(27900000000000000000), "Incorrect price fetch");
         assertEq(details.priceDetails.token, address(decentralandAdapter.acceptedToken()), "Incorrect token address");
         assertEq(details.name, "Blue santa hat", "Incorrect name");

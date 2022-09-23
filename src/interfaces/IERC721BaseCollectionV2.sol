@@ -2,7 +2,9 @@
 
 pragma solidity 0.8.15;
 
-interface IERC721BaseCollectionV2 {
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+
+interface IERC721BaseCollectionV2 is IERC721 {
     function COLLECTION_HASH() external view returns (bytes32);
 
     struct ItemParam {
@@ -55,4 +57,14 @@ interface IERC721BaseCollectionV2 {
         external
         pure
         returns (uint256 itemId, uint256 issuedId);
+
+    
+    /**
+     * @notice Encode token id
+     * @dev itemId (`itemIdBits` bits) + issuedId (`issuedIdBits` bits)
+     * @param _itemId - item id
+     * @param _issuedId - issued id
+     * @return id uint256 of the encoded id
+     */
+    function encodeTokenId(uint256 _itemId, uint256 _issuedId) external pure returns (uint256 id);
 }

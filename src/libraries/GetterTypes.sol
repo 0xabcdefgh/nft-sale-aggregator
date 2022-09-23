@@ -6,14 +6,9 @@ struct PriceDetails {
     uint256 price;
 }
 
-struct OrderDetails {
-    MarketplaceType marketType;
-    bool orderIsStillValid;
-}
-
 struct NFTDetails {
     PriceDetails priceDetails;
-    OrderDetails orderDetails;
+    OrderStatus status;
     string name;
     string symbol;
     string tokenURI;
@@ -21,7 +16,7 @@ struct NFTDetails {
     string contentHash;
 }
 
-enum MarketplaceType {
-    Primary,
-    Secondary
+enum OrderStatus {
+    Live,
+    NotLive
 }
